@@ -22,7 +22,8 @@
  * Internal mechanisms should be kept in Xen-private headers.
  */
 
-#if !defined(__GNUC__) || defined(__STRICT_ANSI__)
+/* modification for zephyr: For ARM, we don't need the GNU extensions. */
+#if (!defined(__GNUC__) || defined(__STRICT_ANSI__)) && !(defined(__arm__) || defined(__aarch64__))
 #error "Anonymous structs/unions are a GNU extension."
 #endif
 
