@@ -20,18 +20,29 @@
  */
 #define VIRTIO_MMIO_DEV_SIZE   xen_mk_ullong(0x200)
 
+/*
+ * Each virtio-mmio device is placed in its own guest page. External
+ * device models (IOREQ servers) running in backend domains manage and
+ * map the register window at page granularity, so two devices must not
+ * share a page. The IRQ range (GUEST_VIRTIO_MMIO_SPI_FIRST ..
+ * GUEST_VIRTIO_MMIO_SPI_LAST) is far more restrictive than the address
+ * space, so the page-sized stride does not reduce the number of
+ * supported devices.
+ */
+#define VIRTIO_MMIO_DEV_STRIDE ROUNDUP(VIRTIO_MMIO_DEV_SIZE, XC_PAGE_SIZE)
+
 static uint64_t alloc_virtio_mmio_base(libxl__gc *gc, uint64_t *virtio_mmio_base)
 {
     uint64_t base = *virtio_mmio_base;
 
     /* Make sure we have enough reserved resources */
-    if (base + VIRTIO_MMIO_DEV_SIZE >
+    if (base + VIRTIO_MMIO_DEV_STRIDE >
         GUEST_VIRTIO_MMIO_BASE + GUEST_VIRTIO_MMIO_SIZE) {
         LOG(ERROR, "Ran out of reserved range for Virtio MMIO BASE 0x%"PRIx64"\n",
             base);
         return 0;
     }
-    *virtio_mmio_base += VIRTIO_MMIO_DEV_SIZE;
+    *virtio_mmio_base += VIRTIO_MMIO_DEV_STRIDE;
 
     return base;
 }
